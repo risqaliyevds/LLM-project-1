@@ -1,11 +1,14 @@
 import subprocess
 
 import speech_recognition as sr
+from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2ForCTC, AutoModelForCTC
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from utils import WHITESPACE_HANDLER
 from transformers import pipeline
 from settings import settings
+from transformers import AutoProcessor, AutoModelForCTC
 import torchaudio
+import requests
 
 
 async def create_wav(audio_file):
@@ -18,18 +21,18 @@ async def speech2text(audio_file):
     if not audio_file.endswith(".wav"):
         audio_file = await create_wav()
 
-    recognizer = sr.Recognizer()
-    with sr.AudioFile(audio_file) as audio_file:
-        audio = recognizer.record(audio_file)
-        aligned_transcript = recognizer.recognize_google(audio, language=settings.LANGUAGE)
+    # recognizer = sr.Recognizer()
+    # with sr.AudioFile(audio_file) as audio_file:
+    #     audio = recognizer.record(audio_file)
+    #     aligned_transcript = recognizer.recognize_google(audio, language=settings.LANGUAGE)
 
-    # waveform, sample_rate = torchaudio.load(audio_path)
-    # pipe = pipeline(settings.STT_PROCESSOR, model=settings.SUMMARIZER_MODEL)
-    # numpy_waveform = waveform.numpy()
-    # aligned_transcript = pipe(numpy_waveform)
+    url = settings.URL
+    headers = {'Authorization': settings.API}
+    files = {'file': (audio_file, open(audio_file, 'rb'))}
+    response = requests.post(url, headers=headers, files=files)
+    aligned_transcript = response.json()['result']["text"]
 
     return aligned_transcript
-
 
 async def summerizer(aligned_transcript):
     model_name = settings.SUMMARIZER_MODEL

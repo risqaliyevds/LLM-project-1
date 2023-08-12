@@ -13,5 +13,5 @@ app = gr.Interface(
     live=False
 )
 
-app.launch(share=True)
+app.launch(share=False)
 
